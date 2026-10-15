@@ -1,0 +1,36 @@
+name: CIFAR10 Assignment Run
+
+on:
+  push:
+    branches: [cifar10-assignment-run]
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      EPOCHS: '8'
+      BATCH_SIZE: '256'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch torchvision tensorboard matplotlib
+      - name: Run assignment experiments
+        run: python cifar10_hw.py | tee training_log.txt
+      - name: Package submission artifacts
+        run: |
+          cp cifar10_hw.py assignment_output/cifar10_hw.py
+          cp training_log.txt assignment_output/training_log.txt
+          zip -r cifar10_assignment_results.zip assignment_output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cifar10-assignment-results
+          path: cifar10_assignment_results.zip
+          retention-days: 7
