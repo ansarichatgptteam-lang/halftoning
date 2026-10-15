@@ -1,4 +1,4 @@
-name: CIFAR10 Assignment Run
+name: CIFAR10 Assignment Parallel
 
 on:
   push:
@@ -8,10 +8,15 @@ on:
 jobs:
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        experiment: [adam_no_aug, adam_aug, sgd_momentum_aug, adamw_aug]
     env:
-      EPOCHS: '8'
+      EPOCHS: '6'
       BATCH_SIZE: '256'
+      EXPERIMENT: ${{ matrix.experiment }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,15 +26,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install torch torchvision tensorboard matplotlib
-      - name: Run assignment experiments
+      - name: Run one experiment
         run: python cifar10_hw.py | tee training_log.txt
-      - name: Package submission artifacts
+      - name: Package experiment artifact
         run: |
           cp cifar10_hw.py assignment_output/cifar10_hw.py
-          cp training_log.txt assignment_output/training_log.txt
-          zip -r cifar10_assignment_results.zip assignment_output
+          cp training_log.txt assignment_output/training_log_${EXPERIMENT}.txt
+          zip -r result_${EXPERIMENT}.zip assignment_output
       - uses: actions/upload-artifact@v4
         with:
-          name: cifar10-assignment-results
-          path: cifar10_assignment_results.zip
+          name: result-${{ matrix.experiment }}
+          path: result_${{ matrix.experiment }}.zip
           retention-days: 7
