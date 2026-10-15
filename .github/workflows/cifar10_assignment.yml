@@ -5,6 +5,10 @@ on:
     branches: [cifar10-assignment-run]
   workflow_dispatch:
 
+concurrency:
+  group: cifar10-assignment-latest
+  cancel-in-progress: true
+
 jobs:
   train:
     runs-on: ubuntu-latest
